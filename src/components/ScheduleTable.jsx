@@ -1,32 +1,45 @@
 import React from "react";
-
-function ScheduleTable({ shifts }) {
+const ScheduleTable = ({ shifts }) => {
   if (!shifts.length) return <p>No shifts added yet.</p>;
 
   return (
-    <table className="min-w-full bg-white border rounded shadow-md mt-4">
-      <thead className="bg-purple-600 text-white">
-        <tr>
-          <th className="p-2">Role</th>
-          <th className="p-2">Date</th>
-          <th className="p-2">Start</th>
-          <th className="p-2">End</th>
-          <th className="p-2">Location</th>
+    <table className="w-full border-collapse border">
+      <thead>
+        <tr className="bg-gray-100">
+          <th className="border p-2">Role</th>
+          <th className="border p-2">Date</th>
+          <th className="border p-2">Time</th>
+          <th className="border p-2">Location</th>
+          <th className="border p-2">Volunteers</th>
         </tr>
       </thead>
       <tbody>
         {shifts.map((shift, idx) => (
-          <tr key={idx} className="border-t text-center">
-            <td className="p-2">{shift.role}</td>
-            <td className="p-2">{shift.date}</td>
-            <td className="p-2">{shift.startTime}</td>
-            <td className="p-2">{shift.endTime}</td>
-            <td className="p-2">{shift.location}</td>
+          <tr key={idx}>
+            <td className="border p-2">{shift.role}</td>
+            <td className="border p-2">{shift.date}</td>
+            <td className="border p-2">
+              {shift.startTime}–{shift.endTime}
+            </td>
+            <td className="border p-2">{shift.location}</td>
+            <td className="border p-2">
+              {shift.volunteers.length > 0 ? (
+                <ul className="list-disc pl-5">
+                  {shift.volunteers.map((v, i) => (
+                    <li key={i}>
+                      {v.name} ({v.email})
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                "—"
+              )}
+            </td>
           </tr>
         ))}
       </tbody>
     </table>
   );
-}
+};
 
 export default ScheduleTable;
