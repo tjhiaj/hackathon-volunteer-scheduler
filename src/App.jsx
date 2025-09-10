@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import Admin from "./pages/Admin";
 import Volunteer from "./pages/Volunteer";
 import Home from "./pages/Home";
-import ScheduleTable from "./components/ScheduleTable";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
   const [tab, setTab] = useState("home");
   const [shifts, setShifts] = useState([]);
+  const [user, setUser] = useState(null); // logged-in user
 
-  // Fetch shifts from backend
   const fetchShifts = async () => {
     try {
       const res = await fetch("http://localhost:4000/shifts");
@@ -28,14 +29,31 @@ function App() {
       {/* Navigation */}
       <div className="flex justify-center space-x-4 mb-6">
         <button onClick={() => setTab("home")} className={tab === "home" ? "font-bold" : ""}>Home</button>
-        <button onClick={() => setTab("admin")} className={tab === "admin" ? "font-bold" : ""}>Admin</button>
-        <button onClick={() => setTab("volunteer")} className={tab === "volunteer" ? "font-bold" : ""}>Volunteer</button>
+        {!user && (
+          <>
+            <button onClick={() => setTab("login")} className={tab === "login" ? "font-bold" : ""}>Login</button>
+            <button onClick={() => setTab("register")} className={tab === "register" ? "font-bold" : ""}>Register</button>
+          </>
+        )}
+        {user && (
+          <>
+            <button onClick={() => setTab("admin")} className={tab === "admin" ? "font-bold" : ""}>Admin</button>
+            <button onClick={() => setTab("volunteer")} className={tab === "volunteer" ? "font-bold" : ""}>Volunteer</button>
+            <button onClick={() => setUser(null)}>Logout</button>
+          </>
+        )}
       </div>
 
       {/* Pages */}
       {tab === "home" && <Home />}
-      {tab === "admin" && <Admin shifts={shifts} refreshShifts={fetchShifts} />}
-      {tab === "volunteer" && <Volunteer shifts={shifts} refreshShifts={fetchShifts} />}
+      {tab === "login" && <Login setUser={setUser} setTab={setTab} />}
+      {tab === "register" && <Register setUser={setUser} setTab={setTab} />}
+      {user && user.role === "admin" && tab === "admin" && (
+        <Admin shifts={shifts} refreshShifts={fetchShifts} />
+      )}
+      {user && user.role === "volunteer" && tab === "volunteer" && (
+        <Volunteer shifts={shifts} refreshShifts={fetchShifts} />
+      )}
     </div>
   );
 }

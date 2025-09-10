@@ -2,7 +2,9 @@
 import express from "express";
 import cors from "cors";
 import Database from "better-sqlite3";
+import bcrypt from "bcrypt";
 
+const SALT_ROUNDS = 10;
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -29,6 +31,16 @@ db.prepare(`
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     FOREIGN KEY(shiftId) REFERENCES shifts(id)
+  )
+`).run();
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('admin', 'volunteer'))
   )
 `).run();
 
@@ -197,6 +209,48 @@ app.delete("/shifts/:id/volunteer", (req, res) => {
   } catch (err) {
     console.error("Error un-signing up:", err);
     res.status(500).json({ error: "Failed to un-sign from shift" });
+  }
+});
+
+// Register a new user
+app.post("/users/register", async (req, res) => {
+  const { name, email, password, role } = req.body;
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: "All fields required" });
+  }
+
+  try {
+    const hashed = await bcrypt.hash(password, SALT_ROUNDS);
+    const stmt = db.prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+    const info = stmt.run(name, email, hashed, role);
+
+    res.status(201).json({ id: info.lastInsertRowid, name, email, role });
+  } catch (err) {
+    if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Login user
+app.post("/users/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: "Email and password required" });
+
+  try {
+    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ error: "Invalid credentials" });
+
+    // Return user info (in production, return a token)
+    res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
