@@ -57,6 +57,39 @@ app.post("/shifts", (req, res) => {
   res.status(201).json(shift);
 });
 
+// Edit a shift
+app.put("/shifts/:id", (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { role, date, startTime, endTime, location } = req.body;
+
+    if (!role || !date || !startTime || !endTime || !location) {
+      return res.status(400).json({ error: "All fields required" });
+    }
+
+    const stmt = db.prepare(
+      `UPDATE shifts
+       SET role = ?, date = ?, startTime = ?, endTime = ?, location = ?
+       WHERE id = ?`
+    );
+    const info = stmt.run(role, date, startTime, endTime, location, id);
+
+    if (info.changes === 0) {
+      return res.status(404).json({ error: "Shift not found" });
+    }
+
+    const updated = db.prepare("SELECT * FROM shifts WHERE id = ?").get(id);
+    const volunteers = db.prepare("SELECT name, email FROM volunteers WHERE shiftId = ?").all(id);
+    updated.volunteers = volunteers;
+
+    console.log("Shift updated:", updated);
+    return res.json(updated);
+  } catch (err) {
+    console.error("PUT /shifts/:id error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Sign up for a shift
 app.post("/shifts/:id/volunteer", (req, res) => {
   const shiftId = parseInt(req.params.id);
