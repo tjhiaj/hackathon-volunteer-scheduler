@@ -90,6 +90,29 @@ app.put("/shifts/:id", (req, res) => {
   }
 });
 
+// Delete a shift
+app.delete("/shifts/:id", (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+
+    // delete volunteers first (if you want cascade delete)
+    db.prepare("DELETE FROM volunteers WHERE shiftId = ?").run(id);
+
+    // then delete shift
+    const stmt = db.prepare("DELETE FROM shifts WHERE id = ?");
+    const info = stmt.run(id);
+
+    if (info.changes === 0) {
+      return res.status(404).json({ error: "Shift not found" });
+    }
+
+    return res.json({ success: true, id });
+  } catch (err) {
+    console.error("DELETE /shifts/:id error:", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Sign up for a shift
 app.post("/shifts/:id/volunteer", (req, res) => {
   const shiftId = parseInt(req.params.id);

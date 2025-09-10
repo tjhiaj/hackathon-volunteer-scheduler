@@ -92,12 +92,36 @@ const Admin = ({ shifts, refreshShifts }) => {
                     ? shift.volunteers.map(v => `${v.name} (${v.email})`).join(", ")
                     : "—"}
                 </td>
-                <td className="p-2">
+                <td className="px-4 py-2">
                   <button
-                    className="px-2 py-1 bg-yellow-500 text-white rounded mr-2"
                     onClick={() => setEditingShift(shift)}
+                    className="px-2 py-1 bg-yellow-500 text-white rounded mr-2"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (window.confirm("Are you sure you want to delete this shift?")) {
+                        try {
+                          const res = await fetch(`http://localhost:4000/shifts/${shift.id}`, {
+                            method: "DELETE",
+                          });
+                          const data = await res.json();
+                          if (!res.ok) {
+                            console.error("Delete failed:", data);
+                            alert(data.error || "Failed to delete shift");
+                            return;
+                          }
+                          await refreshShifts();
+                        } catch (err) {
+                          console.error("Error deleting shift:", err);
+                          alert("An error occurred while deleting. Check console.");
+                        }
+                      }
+                    }}
+                    className="px-2 py-1 bg-red-600 text-white rounded"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
