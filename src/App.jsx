@@ -37,8 +37,12 @@ function App() {
         )}
         {user && (
           <>
-            <button onClick={() => setTab("admin")} className={tab === "admin" ? "font-bold" : ""}>Admin</button>
-            <button onClick={() => setTab("volunteer")} className={tab === "volunteer" ? "font-bold" : ""}>Volunteer</button>
+            {user.role === "admin" && (
+              <button onClick={() => setTab("admin")} className={tab === "admin" ? "font-bold" : ""}>Admin</button>
+            )}
+            {user.role === "volunteer" && (
+              <button onClick={() => setTab("volunteer")} className={tab === "volunteer" ? "font-bold" : ""}>Volunteer</button>
+            )}
             <button onClick={() => setUser(null)}>Logout</button>
           </>
         )}
@@ -46,13 +50,15 @@ function App() {
 
       {/* Pages */}
       {tab === "home" && <Home />}
+
       {tab === "login" && <Login setUser={setUser} setTab={setTab} />}
       {tab === "register" && <Register setUser={setUser} setTab={setTab} />}
+
       {user && user.role === "admin" && tab === "admin" && (
-        <Admin shifts={shifts} refreshShifts={fetchShifts} />
+          <Admin shifts={shifts} fetchShifts={fetchShifts} user={user} />
       )}
       {user && user.role === "volunteer" && tab === "volunteer" && (
-        <Volunteer shifts={shifts} refreshShifts={fetchShifts} />
+          <Volunteer shifts={shifts} fetchShifts={fetchShifts} user={user} />
       )}
     </div>
   );

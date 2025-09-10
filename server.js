@@ -50,7 +50,7 @@ app.get("/shifts", (req, res) => {
 
   try {
     let sql = `
-      SELECT s.id, s.day, s.startTime, s.endTime, s.role,
+      SELECT s.id, s.date, s.startTime, s.endTime, s.role,
              v.name as volunteerName, v.email as volunteerEmail
       FROM shifts s
       LEFT JOIN volunteers v ON s.id = v.shiftId
@@ -59,7 +59,7 @@ app.get("/shifts", (req, res) => {
 
     const conditions = [];
     if (day) {
-      conditions.push("s.day = ?");
+      conditions.push("s.date = ?");
       params.push(day);
     }
     if (role) {
