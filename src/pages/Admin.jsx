@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ScheduleTable from "../components/ScheduleTable";
 
-const Admin = ({ shifts, refreshShifts }) => {
+const Admin = ({ shifts, setShifts }) => { // Accept setShifts directly
   const [editingShift, setEditingShift] = useState(null);
   const [form, setForm] = useState({
     role: "",
@@ -11,36 +11,69 @@ const Admin = ({ shifts, refreshShifts }) => {
     location: "",
   });
 
+  // Add shift
   const handleAddShift = async () => {
-    const res = await fetch("http://localhost:4000/shifts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch("http://localhost:4000/shifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    if (res.ok) {
+      if (!res.ok) {
+        const data = await res.json();
+        return alert(data.error || "Failed to add shift");
+      }
+
+      const newShift = await res.json();
+      setShifts((prev) => [...prev, newShift]); // Add new shift locally
       setForm({ role: "", date: "", startTime: "", endTime: "", location: "" });
-      refreshShifts();
+    } catch (err) {
+      console.error(err);
+      alert("Network error while adding shift");
     }
   };
 
+  // Edit shift
   const handleEditShift = async () => {
-    const res = await fetch(`http://localhost:4000/shifts/${editingShift.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch(`http://localhost:4000/shifts/${editingShift.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    if (res.ok) {
+      if (!res.ok) {
+        const data = await res.json();
+        return alert(data.error || "Failed to update shift");
+      }
+
+      const updatedShift = await res.json();
+
+      // Update local shifts state immediately
+      setShifts((prev) =>
+        prev.map((s) => (s.id === updatedShift.id ? updatedShift : s))
+      );
+
       setEditingShift(null);
       setForm({ role: "", date: "", startTime: "", endTime: "", location: "" });
-      refreshShifts();
+    } catch (err) {
+      console.error(err);
+      alert("Network error while editing shift");
     }
   };
 
+  // Delete shift
   const handleDeleteShift = async (id) => {
-    const res = await fetch(`http://localhost:4000/shifts/${id}`, { method: "DELETE" });
-    if (res.ok) refreshShifts();
+    try {
+      const res = await fetch(`http://localhost:4000/shifts/${id}`, { method: "DELETE" });
+      if (!res.ok) return alert("Failed to delete shift");
+
+      setShifts((prev) => prev.filter((s) => s.id !== id)); // Remove locally
+    } catch (err) {
+      console.error(err);
+      alert("Network error while deleting shift");
+    }
   };
 
   return (
@@ -99,13 +132,19 @@ const Admin = ({ shifts, refreshShifts }) => {
         </button>
       )}
 
-      {/* Schedule Table with filtering */}
+      {/* Schedule Table */}
       <ScheduleTable
         shifts={shifts}
         mode="admin"
         onEdit={(shift) => {
           setEditingShift(shift);
-          setForm(shift);
+          setForm({
+            role: shift.role,
+            date: shift.date,
+            startTime: shift.startTime,
+            endTime: shift.endTime,
+            location: shift.location,
+          });
         }}
         onDelete={handleDeleteShift}
       />

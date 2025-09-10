@@ -55,8 +55,9 @@ function App() {
       {tab === "register" && <Register setUser={setUser} setTab={setTab} />}
 
       {user && user.role === "admin" && tab === "admin" && (
-          <Admin shifts={shifts} fetchShifts={fetchShifts} user={user} />
+        <Admin shifts={shifts} setShifts={setShifts} />
       )}
+
       {user && user.role === "volunteer" && tab === "volunteer" && (
           <Volunteer shifts={shifts} fetchShifts={fetchShifts} user={user} />
       )}

@@ -50,7 +50,7 @@ app.get("/shifts", (req, res) => {
 
   try {
     let sql = `
-      SELECT s.id, s.date, s.startTime, s.endTime, s.role,
+      SELECT s.id, s.date, s.startTime, s.endTime, s.role, s.location,
              v.name as volunteerName, v.email as volunteerEmail
       FROM shifts s
       LEFT JOIN volunteers v ON s.id = v.shiftId
