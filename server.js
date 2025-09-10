@@ -131,5 +131,26 @@ app.post("/shifts/:id/volunteer", (req, res) => {
   res.json({ ...shift, volunteers });
 });
 
+// Un-signup from a shift
+app.delete("/shifts/:id/volunteer", (req, res) => {
+  const { id } = req.params;
+  const { name, email } = req.body;
+
+  try {
+    // Delete the volunteer row from the database
+    const stmt = db.prepare("DELETE FROM volunteers WHERE shiftId = ? AND name = ? AND email = ?");
+    const result = stmt.run(id, name, email);
+
+    if (result.changes === 0) {
+      return res.status(400).json({ error: "You were not signed up for this shift." });
+    }
+
+    res.json({ message: "Successfully un-signed from shift" });
+  } catch (err) {
+    console.error("Error un-signing up:", err);
+    res.status(500).json({ error: "Failed to un-sign from shift" });
+  }
+});
+
 const PORT = 4000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
