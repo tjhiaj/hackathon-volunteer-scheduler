@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Admin from "./pages/Admin";
 import Volunteer from "./pages/Volunteer";
 import Home from "./pages/Home";
+import ScheduleTable from "./components/ScheduleTable";
 
 function App() {
   const [tab, setTab] = useState("home");

@@ -32,14 +32,62 @@ db.prepare(`
   )
 `).run();
 
-// Get all shifts with volunteers
+// Get shifts (with optional filters)
 app.get("/shifts", (req, res) => {
-  const shifts = db.prepare("SELECT * FROM shifts").all();
-  const result = shifts.map(shift => {
-    const volunteers = db.prepare("SELECT name, email FROM volunteers WHERE shiftId = ?").all(shift.id);
-    return { ...shift, volunteers };
-  });
-  res.json(result);
+  const { day, role, volunteer } = req.query;
+
+  try {
+    let sql = `
+      SELECT s.id, s.day, s.startTime, s.endTime, s.role,
+             v.name as volunteerName, v.email as volunteerEmail
+      FROM shifts s
+      LEFT JOIN volunteers v ON s.id = v.shiftId
+    `;
+    const params = [];
+
+    const conditions = [];
+    if (day) {
+      conditions.push("s.day = ?");
+      params.push(day);
+    }
+    if (role) {
+      conditions.push("s.role = ?");
+      params.push(role);
+    }
+    if (volunteer) {
+      conditions.push("(v.name LIKE ? OR v.email LIKE ?)");
+      params.push(`%${volunteer}%`, `%${volunteer}%`);
+    }
+
+    if (conditions.length > 0) {
+      sql += " WHERE " + conditions.join(" AND ");
+    }
+
+    const rows = db.prepare(sql).all(...params);
+
+    // Reformat into shifts with volunteer arrays
+    const shifts = {};
+    rows.forEach(r => {
+      if (!shifts[r.id]) {
+        shifts[r.id] = {
+          id: r.id,
+          day: r.day,
+          startTime: r.startTime,
+          endTime: r.endTime,
+          role: r.role,
+          volunteers: []
+        };
+      }
+      if (r.volunteerName) {
+        shifts[r.id].volunteers.push({ name: r.volunteerName, email: r.volunteerEmail });
+      }
+    });
+
+    res.json(Object.values(shifts));
+  } catch (err) {
+    console.error("Error fetching shifts:", err);
+    res.status(500).json({ error: "Failed to fetch shifts" });
+  }
 });
 
 // Add new shift
