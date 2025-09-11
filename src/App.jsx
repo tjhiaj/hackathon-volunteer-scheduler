@@ -59,7 +59,7 @@ function App() {
       )}
 
       {user && user.role === "volunteer" && tab === "volunteer" && (
-          <Volunteer shifts={shifts} fetchShifts={fetchShifts} user={user} />
+          <Volunteer shifts={shifts} fetchShifts={fetchShifts} user={user} userEmail={user.email}/>
       )}
     </div>
   );

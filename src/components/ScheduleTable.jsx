@@ -80,23 +80,23 @@ const ScheduleTable = ({
                 </td>
                 <td className="border p-2 space-x-2">
                   {mode === "volunteer" && (
-                    <>
+                    shift.volunteers.some(v => v.email === userEmail) ? (
+                      <button
+                        className="bg-yellow-500 text-white px-3 py-1 rounded"
+                        onClick={() => onUnsignUp(shift.id)}
+                      >
+                        Un-Sign
+                      </button>
+                    ) : (
                       <button
                         className="bg-green-500 text-white px-3 py-1 rounded"
                         onClick={() => onSignUp(shift.id, shift.role)}
                       >
                         Sign Up
                       </button>
-                      {shift.volunteers.some(v => v.email === userEmail) && (
-                        <button
-                          className="bg-yellow-500 text-white px-3 py-1 rounded"
-                          onClick={() => onUnsignUp(shift.id)}
-                        >
-                          Un-Sign
-                        </button>
-                      )}
-                    </>
+                    )
                   )}
+
                   {mode === "admin" && (
                     <>
                       <button

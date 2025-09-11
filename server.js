@@ -80,20 +80,21 @@ app.get("/shifts", (req, res) => {
     // Reformat into shifts with volunteer arrays
     const shifts = {};
     rows.forEach(r => {
-      if (!shifts[r.id]) {
-        shifts[r.id] = {
-          id: r.id,
-          day: r.day,
-          startTime: r.startTime,
-          endTime: r.endTime,
-          role: r.role,
-          volunteers: []
-        };
-      }
-      if (r.volunteerName) {
-        shifts[r.id].volunteers.push({ name: r.volunteerName, email: r.volunteerEmail });
-      }
-    });
+    if (!shifts[r.id]) {
+      shifts[r.id] = {
+        id: r.id,
+        date: r.date,           // fixed
+        startTime: r.startTime,
+        endTime: r.endTime,
+        role: r.role,
+        location: r.location,   // added
+        volunteers: []
+      };
+    }
+    if (r.volunteerName) {
+      shifts[r.id].volunteers.push({ name: r.volunteerName, email: r.volunteerEmail });
+    }
+  });
 
     res.json(Object.values(shifts));
   } catch (err) {
